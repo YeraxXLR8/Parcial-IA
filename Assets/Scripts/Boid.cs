@@ -4,8 +4,11 @@ using UnityEngine;
 
 public class Boid : MonoBehaviour
 {
+    //public List<Transform> allcarrots = new List<Transform>();
+    public int carrotIndex;
+
     private Vector3 _velocity;
-    public Transform target;
+    public GameObject target;
     public float maxSpeed;
     public float maxForce;
 
@@ -41,6 +44,7 @@ public class Boid : MonoBehaviour
 
         transform.position += _velocity * Time.deltaTime;
         transform.forward   = _velocity;
+
     }
 
     Vector3 Separation()
@@ -129,22 +133,27 @@ public class Boid : MonoBehaviour
     }
     void ArriveBoid()
     {
-        Vector3 desired = target.position - transform.position;
+        Vector3 desired = target.transform.position - transform.position;
         desired.Normalize();
 
         float speed = maxSpeed;
-        float distanceTarget = Vector3.Distance(target.position, transform.position);
+        float distanceTarget = Vector3.Distance(target.transform.position, transform.position);
         if (distanceTarget < arriveRadius)
         {
             speed = maxSpeed * (distanceTarget / arriveRadius);
         }
+        if (distanceTarget <= 0.2f)
+        {
+            Destroy(target.gameObject);
+        }
+
         desired *= speed;
         Vector3 steering = desired - _velocity;
         steering = Vector3.ClampMagnitude(steering, maxForce / 10);
 
+
         ApplyForce(steering);
 
-        
     }
     void ApplyForce(Vector3 force)
     {
@@ -156,7 +165,7 @@ public class Boid : MonoBehaviour
         Gizmos.DrawWireSphere(transform.position,viewRadius);
 
         Gizmos.color = Color.red;
-        Gizmos.DrawWireSphere(target.position, arriveRadius);
+        Gizmos.DrawWireSphere(target.transform.position, arriveRadius);
     }
 
     Vector3 CalculateSteering(Vector3 desired)
