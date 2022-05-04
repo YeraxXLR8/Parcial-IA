@@ -144,7 +144,7 @@ public class Boid : MonoBehaviour
 
         ApplyForce(steering);
 
-        Destroy(target);
+        
     }
     void ApplyForce(Vector3 force)
     {
