@@ -5,10 +5,12 @@ using UnityEngine;
 public class Boid : MonoBehaviour
 {
     private Vector3 _velocity;
+    public Transform target;
     public float maxSpeed;
     public float maxForce;
 
     public float viewRadius;
+    public float arriveRadius;
 
     public float separationWeight;
     public float alignmentWeight;
@@ -29,13 +31,16 @@ public class Boid : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        transform.position += _velocity * Time.deltaTime;
-        transform.forward = _velocity;
-
         CheckBounds();
+
         ApplyForce(Separation() * separationWeight);
         ApplyForce(Alignment() * alignmentWeight);
         ApplyForce(Cohesion() * cohesionWeight);
+
+        ArriveBoid();
+
+        transform.position += _velocity * Time.deltaTime;
+        transform.forward   = _velocity;
     }
 
     Vector3 Separation()
@@ -55,6 +60,7 @@ public class Boid : MonoBehaviour
         }
 
         if (desired == Vector3.zero) return desired;
+
         desired *= -1;
         desired = desired.normalized * maxSpeed;
 
@@ -115,10 +121,30 @@ public class Boid : MonoBehaviour
         }
 
         if (count == 0) return desired;
+
         desired /= count;
         desired = desired - transform.position;
 
-        return (CalculateSteering(desired));
+        return CalculateSteering(desired);
+    }
+    void ArriveBoid()
+    {
+        Vector3 desired = target.position - transform.position;
+        desired.Normalize();
+
+        float speed = maxSpeed;
+        float distanceTarget = Vector3.Distance(target.position, transform.position);
+        if (distanceTarget < arriveRadius)
+        {
+            speed = maxSpeed * (distanceTarget / arriveRadius);
+        }
+        desired *= speed;
+        Vector3 steering = desired - _velocity;
+        steering = Vector3.ClampMagnitude(steering, maxForce / 10);
+
+        ApplyForce(steering);
+
+        Destroy(target);
     }
     void ApplyForce(Vector3 force)
     {
@@ -128,6 +154,9 @@ public class Boid : MonoBehaviour
     {
         Gizmos.color = Color.blue;
         Gizmos.DrawWireSphere(transform.position,viewRadius);
+
+        Gizmos.color = Color.red;
+        Gizmos.DrawWireSphere(target.position, arriveRadius);
     }
 
     Vector3 CalculateSteering(Vector3 desired)
